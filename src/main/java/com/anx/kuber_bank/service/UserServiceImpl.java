@@ -20,6 +20,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired EmailService emailService;
 
+    @Autowired TransactionService transactionService;
+
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
 
@@ -111,6 +113,15 @@ public class UserServiceImpl implements UserService {
         User userToCredit = userRepository.findByAccountNumber(creditDebitRequest.getAccountNumber());
         userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(creditDebitRequest.getAmount()));
         userRepository.save(userToCredit);
+
+        // Save the transaction
+        TransactionDto transactionDto = TransactionDto.builder()
+                .transactionType(AccountConstants.TransactionType.CREDIT.name())
+                .accountNumber(userToCredit.getAccountNumber())
+                .amount(creditDebitRequest.getAmount())
+                .build();
+        transactionService.saveTransaction(transactionDto);
+
         return BankResponse.builder()
                 .responseCode(ACCOUNT_CREDITED_CODE)
                 .responseMessage(ACCOUNT_CREDITED_MESSAGE)
@@ -141,6 +152,15 @@ public class UserServiceImpl implements UserService {
         } else {
             userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(creditDebitRequest.getAmount()));
             userRepository.save(userToDebit);
+
+            // Save the transaction
+            TransactionDto transactionDto = TransactionDto.builder()
+                    .transactionType(AccountConstants.TransactionType.DEBIT.name())
+                    .accountNumber(userToDebit.getAccountNumber())
+                    .amount(creditDebitRequest.getAmount())
+                    .build();
+            transactionService.saveTransaction(transactionDto);
+
             return BankResponse.builder()
                     .responseCode(ACCOUNT_DEBITED_CODE)
                     .responseMessage(ACCOUNT_DEBITED_MESSAGE)
@@ -192,6 +212,16 @@ public class UserServiceImpl implements UserService {
                 .build();
         emailService.sendEmailAlerts(debitEmail);
 
+
+        // Save the transaction
+        TransactionDto sourceTransactionDto = TransactionDto.builder()
+                .transactionType(AccountConstants.TransactionType.DEBIT.name())
+                .accountNumber(sourceAccountUser.getAccountNumber())
+                .amount(transferRequest.getAmount())
+                .build();
+        transactionService.saveTransaction(sourceTransactionDto);
+
+
         User destinationAccountUser = userRepository.findByAccountNumber(transferRequest.getDestinationAccountNumber());
         destinationAccountUser.setAccountBalance(destinationAccountUser.getAccountBalance().add(transferRequest.getAmount()));
         userRepository.save(destinationAccountUser);
@@ -203,6 +233,16 @@ public class UserServiceImpl implements UserService {
                 .messageBody("Dear "+ destinationUserName + ",\n" + "Your A/C "+ maskedDestinationAc + " Credit INR "+ transferRequest.getAmount() + " on "+ new Date() +". Your available account balance is : "+ destinationAccountUser.getAccountBalance())
                 .build();
         emailService.sendEmailAlerts(creditAlert);
+
+
+        // Save the transaction
+        TransactionDto destinationTransactionDto = TransactionDto.builder()
+                .transactionType(AccountConstants.TransactionType.CREDIT.name())
+                .accountNumber(destinationAccountUser.getAccountNumber())
+                .amount(transferRequest.getAmount())
+                .build();
+        transactionService.saveTransaction(destinationTransactionDto);
+
         return BankResponse.builder()
                 .responseCode(TRANSFER_SUCCESS_CODE)
                 .responseMessage(TRANSFER_SUCCESS_MESSAGE)

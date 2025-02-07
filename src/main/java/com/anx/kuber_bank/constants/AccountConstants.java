@@ -11,4 +11,17 @@ public class AccountConstants {
         DORMANT,
         CLOSED
     }
+
+    @Getter
+    public enum TransactionStatus {
+        SUCCESS,
+        FAILURE,
+        PENDING
+    }
+
+
+    public enum TransactionType {
+        CREDIT,
+        DEBIT
+    }
 }
