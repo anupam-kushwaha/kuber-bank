@@ -35,6 +35,9 @@ public class AccountUtils {
     public static final String TRANSFER_SUCCESS_CODE = "AC0010";
     public static final String TRANSFER_SUCCESS_MESSAGE = "Transfer successfully completed!!";
 
+    public static final String BANK_STATEMENT_GEN_SUCCESS_CODE = "AC0011";
+    public static final String BANK_STATEMENT_GEN_SUCCESS_MESSAGE = "Bank statement successfully generated!!";
+
     /**
      *  current year + random six digits number
      */

@@ -119,6 +119,7 @@ public class UserServiceImpl implements UserService {
                 .transactionType(AccountConstants.TransactionType.CREDIT.name())
                 .accountNumber(userToCredit.getAccountNumber())
                 .amount(creditDebitRequest.getAmount())
+                .accountBalance(userToCredit.getAccountBalance())
                 .build();
         transactionService.saveTransaction(transactionDto);
 
@@ -158,6 +159,7 @@ public class UserServiceImpl implements UserService {
                     .transactionType(AccountConstants.TransactionType.DEBIT.name())
                     .accountNumber(userToDebit.getAccountNumber())
                     .amount(creditDebitRequest.getAmount())
+                    .accountBalance(userToDebit.getAccountBalance())
                     .build();
             transactionService.saveTransaction(transactionDto);
 
@@ -218,6 +220,7 @@ public class UserServiceImpl implements UserService {
                 .transactionType(AccountConstants.TransactionType.DEBIT.name())
                 .accountNumber(sourceAccountUser.getAccountNumber())
                 .amount(transferRequest.getAmount())
+                .accountBalance(sourceAccountUser.getAccountBalance())
                 .build();
         transactionService.saveTransaction(sourceTransactionDto);
 
@@ -240,6 +243,7 @@ public class UserServiceImpl implements UserService {
                 .transactionType(AccountConstants.TransactionType.CREDIT.name())
                 .accountNumber(destinationAccountUser.getAccountNumber())
                 .amount(transferRequest.getAmount())
+                .accountBalance(destinationAccountUser.getAccountBalance())
                 .build();
         transactionService.saveTransaction(destinationTransactionDto);
 

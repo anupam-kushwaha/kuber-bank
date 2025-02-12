@@ -18,6 +18,7 @@ public class TransactionImpl implements TransactionService {
                 .transactionType(transactionDto.getTransactionType())
                 .accountNumber(transactionDto.getAccountNumber())
                 .amount(transactionDto.getAmount())
+                .accountBalance(transactionDto.getAccountBalance())
                 .status(AccountConstants.TransactionStatus.SUCCESS.name())
                 .build();
         transactionRepository.save(transaction);
