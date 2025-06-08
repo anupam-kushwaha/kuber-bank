@@ -38,6 +38,12 @@ public class AccountUtils {
     public static final String BANK_STATEMENT_GEN_SUCCESS_CODE = "AC0011";
     public static final String BANK_STATEMENT_GEN_SUCCESS_MESSAGE = "Bank statement successfully generated!!";
 
+    public static final String ACCOUNT_NOT_FOUND_CODE = "AC0012";
+    public static final String ACCOUNT_NOT_FOUND_MESSAGE = "Account not found with the given account number.";
+
+    public static final String LOGIN_SUCCESS_CODE = "AC0013";
+public static final String LOGIN_SUCCESS_MESSAGE = "Login successful.";
+
     /**
      *  current year + random six digits number
      */
@@ -48,5 +54,9 @@ public class AccountUtils {
         int max = 999999;
         int rnd = (int) (Math.random() * (max - min + 1) + min);
         return currentYear.toString().concat(String.valueOf(rnd));
+    }
+
+    public static String getFullNameFromEmail(String email) {
+        return "";
     }
 }

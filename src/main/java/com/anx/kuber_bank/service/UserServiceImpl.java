@@ -1,11 +1,16 @@
 package com.anx.kuber_bank.service;
 
+import com.anx.kuber_bank.config.JwtTokenProvider;
 import com.anx.kuber_bank.constants.AccountConstants;
 import com.anx.kuber_bank.dto.*;
+import com.anx.kuber_bank.entity.Role;
 import com.anx.kuber_bank.entity.User;
 import com.anx.kuber_bank.repository.UserRepository;
 import com.anx.kuber_bank.utils.AccountUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,6 +26,9 @@ public class UserServiceImpl implements UserService {
     @Autowired EmailService emailService;
 
     @Autowired TransactionService transactionService;
+    @Autowired PasswordEncoder passwordEncoder;
+    @Autowired AuthenticationManager authenticationManager;
+    @Autowired JwtTokenProvider jwtTokenProvider;
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
@@ -45,9 +53,11 @@ public class UserServiceImpl implements UserService {
                 .accountNumber(AccountUtils.generateAccountNumber())
                 .accountBalance(BigDecimal.ZERO)
                 .email(userRequest.getEmail())
+                .password(passwordEncoder.encode(userRequest.getPassword()))
                 .phoneNumber(userRequest.getPhoneNumber())
                 .alternatePhoneNumber(userRequest.getAlternatePhoneNumber())
                 .status(AccountConstants.AccountStatus.ACTIVE.name())
+                .role(Role.valueOf("ROLE_ADMIN"))
                 .build();
 
         User savedUser = userRepository.save(newUser);
@@ -66,6 +76,28 @@ public class UserServiceImpl implements UserService {
                         .accountNumber(savedUser.getAccountNumber())
                         .accountName(savedUser.getFirstName() + " " + savedUser.getLastName() + " "+ savedUser.getOtherName())
                         .build())
+                .build();
+    }
+
+    public BankResponse login(LoginDto loginDto) {
+        Authentication authentication = null;
+        authentication = authenticationManager.authenticate(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        loginDto.getEmail(), loginDto.getPassword()
+                )
+        );
+
+        EmailDetails loginAlert = EmailDetails.builder()
+                .recipient(loginDto.getEmail())
+                .subject("Login Alert!")
+                .messageBody("Dear " + AccountUtils.getFullNameFromEmail(loginDto.getEmail()) + ",\n" +
+                        "You have successfully logged in to your account on " + new Date() + ". If this was not you, please contact support immediately.")
+                .build();
+        emailService.sendEmailAlerts(loginAlert);
+
+        return BankResponse.builder()
+                .responseCode(LOGIN_SUCCESS_CODE)
+                .responseMessage(jwtTokenProvider.generateToken(authentication))
                 .build();
     }
 

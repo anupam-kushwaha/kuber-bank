@@ -42,4 +42,9 @@ public class UserController {
         public BankResponse transfer(@RequestBody TransferRequest transferRequest) {
                 return userService.transfer(transferRequest);
         }
+
+        @PostMapping(value = "/login")
+        public BankResponse login(@RequestBody LoginDto loginDto) {
+                return userService.login(loginDto);
+        }
 }
