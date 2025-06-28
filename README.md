@@ -107,7 +107,7 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/kuber-bank.git
+git clone https://github.com/anupam-kushwaha/kuber-bank.git
 cd kuber-bank
 
 # Run with Maven
