@@ -1,4 +1,7 @@
-![img.png](img.png)
+<p align="center">
+  <img src="logo.png" alt="Logo" width="200" height="200">
+</p>
+
 ---
 
 # 💰 Kuber Bank System
@@ -6,6 +9,8 @@
 Kuber Bank is a lightweight **Java Spring Boot** banking system that supports basic banking operations including user management, account transactions, balance inquiry, and real-time email communication for key account events. The system also generates account statements and sends them as PDF files via email.
 
 ---
+
+
 
 ## 🚀 Features
 
