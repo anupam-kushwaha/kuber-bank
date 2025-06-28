@@ -23,9 +23,16 @@ public class EmailServiceImpl implements EmailService{
     @Value("${spring.mail.username}")
     private String senderEmail;
 
+    @Value("${send.email.alerts}")
+    private boolean sendEmailAlerts;
+
     @Override
     public void sendEmailAlerts(EmailDetails emailDetails) {
         try {
+            if (!sendEmailAlerts) {
+                log.info("Email alerts are disabled, not sending email to {}", emailDetails.getRecipient());
+                return;
+            }
             SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
             simpleMailMessage.setFrom(senderEmail);
             simpleMailMessage.setTo(emailDetails.getRecipient());
@@ -42,6 +49,11 @@ public class EmailServiceImpl implements EmailService{
 
     @Override
     public void sendEmailWithAttachment(EmailDetails emailDetails) {
+        if (!sendEmailAlerts) {
+            log.info("Email alerts are disabled, not sending email with attachment to {}", emailDetails.getRecipient());
+            return;
+        }
+
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper;
         try {

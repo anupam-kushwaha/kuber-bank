@@ -79,7 +79,7 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    public BankResponse login(LoginDto loginDto) {
+    public LoginResponse login(LoginDto loginDto) {
         Authentication authentication = null;
         authentication = authenticationManager.authenticate(
                 new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
@@ -95,9 +95,10 @@ public class UserServiceImpl implements UserService {
                 .build();
         emailService.sendEmailAlerts(loginAlert);
 
-        return BankResponse.builder()
+        return LoginResponse.builder()
                 .responseCode(LOGIN_SUCCESS_CODE)
-                .responseMessage(jwtTokenProvider.generateToken(authentication))
+                .responseMessage(LOGIN_SUCCESS_MESSAGE)
+                .token(jwtTokenProvider.generateToken(authentication))
                 .build();
     }
 

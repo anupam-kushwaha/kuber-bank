@@ -13,38 +13,14 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
         @Autowired UserService userService;
 
+
         @PostMapping(value = "/create")
         public BankResponse accountCreation(@RequestBody UserRequest userRequest) {
                 return userService.createAccount(userRequest);
         }
 
-        @GetMapping(value = "/balanceEnquiry")
-        public BankResponse balanceEnquiry(@RequestBody EnquiryRequest enquiryRequest) {
-                return userService.balanceEnquiry(enquiryRequest);
-        }
-
-        @GetMapping(value = "/nameEnquiry")
-        public String nameEnquiry(@RequestBody EnquiryRequest enquiryRequest) {
-                return userService.nameEnquiry(enquiryRequest);
-        }
-
-        @PostMapping(value = "/creditAccount")
-        public BankResponse creditAccount(@RequestBody CreditDebitRequest creditDebitRequest) {
-                return userService.creditAccount(creditDebitRequest);
-        }
-
-        @PostMapping(value = "/debitAccount")
-        public BankResponse debitAccount(@RequestBody CreditDebitRequest creditDebitRequest) {
-                return userService.debitAccount(creditDebitRequest);
-        }
-
-        @PostMapping(value = "/transfer")
-        public BankResponse transfer(@RequestBody TransferRequest transferRequest) {
-                return userService.transfer(transferRequest);
-        }
-
         @PostMapping(value = "/login")
-        public BankResponse login(@RequestBody LoginDto loginDto) {
+        public LoginResponse login(@RequestBody LoginDto loginDto) {
                 return userService.login(loginDto);
         }
 }

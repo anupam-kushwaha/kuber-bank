@@ -9,9 +9,14 @@ import com.anx.kuber_bank.repository.UserRepository;
 import com.anx.kuber_bank.utils.PdfGeneratorUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -47,39 +52,10 @@ public class BankStatementService {
                 .filter(transaction -> transaction.getCreatedAt().isBefore(end.atTime(23,59, 59))).toList();
     }
 
-    public BankResponse generateBankStatement(String accountNumber, String startDate, String endDate) {
+    public BankResponse emailBankStatement(String accountNumber, String startDate, String endDate) {
         User accountUser = userRepository.findByAccountNumber(accountNumber);
         if (accountUser != null) {
-            List<Transaction> transactionList = getStatement(accountNumber, startDate, endDate);
-            Map<String, Object> data = new HashMap<>();
-            data.put("transactions", transactionList);
-            String fullName = accountUser.getFirstName() + " " + accountUser.getLastName() + " "+ accountUser.getOtherName();
-            data.put("accountName", fullName);
-            data.put("address", accountUser.getAddress());
-            data.put("accountNumber", accountUser.getAccountNumber());
-            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
-            Date today = new Date();
-            data.put("todayDate", sdf.format(today));
-            data.put("accountBalance", accountUser.getAccountBalance());
-            String statementRange;
-            try {
-                SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd");
-                Date sdate = sdf2.parse(startDate);
-                Date eDate = sdf2.parse(endDate);
-               statementRange = sdf.format(sdate) + " to "+ sdf.format(eDate);
-            } catch (ParseException e) {
-                System.out.println("in catch block while parsing date");
-                log.info("Error while : ", e);
-               statementRange = startDate + " to " + endDate;
-            }
-            data.put("statementRage", statementRange);
-            File bankStatement = pdfGeneratorUtil.generatePDF("", "bank_statement", data);
-            emailService.sendEmailWithAttachment(EmailDetails.builder()
-                            .recipient(accountUser.getEmail())
-                            .subject("Bank Statement from "+ statementRange)
-                            .messageBody("Dear "+ fullName + ",\n" + "Your bank statement for the requested date range has been generated. Please refer to the attachment of this mail.")
-                            .attachment(bankStatement.getAbsolutePath())
-                    .build());
+            getBankStatementPdfFile(accountNumber, startDate, endDate, accountUser, true);
             return BankResponse.builder()
                     .responseCode(BANK_STATEMENT_GEN_SUCCESS_CODE)
                     .responseMessage(BANK_STATEMENT_GEN_SUCCESS_MESSAGE)
@@ -90,5 +66,60 @@ public class BankStatementService {
                 .responseMessage(ACCOUNT_NOT_EXISTS_MESSAGE)
                 .accountInfo(null)
                 .build();
+    }
+
+    private File getBankStatementPdfFile(String accountNumber, String startDate, String endDate, User accountUser, boolean sendPdfInEmail) {
+        List<Transaction> transactionList = getStatement(accountNumber, startDate, endDate);
+        Map<String, Object> data = new HashMap<>();
+        data.put("transactions", transactionList);
+        String fullName = accountUser.getFirstName() + " " + accountUser.getLastName() + " "+ accountUser.getOtherName();
+        data.put("accountName", fullName);
+        data.put("address", accountUser.getAddress());
+        data.put("accountNumber", accountUser.getAccountNumber());
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
+        Date today = new Date();
+        data.put("todayDate", sdf.format(today));
+        data.put("accountBalance", accountUser.getAccountBalance());
+        String statementRange;
+        try {
+            SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd");
+            Date sdate = sdf2.parse(startDate);
+            Date eDate = sdf2.parse(endDate);
+           statementRange = sdf.format(sdate) + " to "+ sdf.format(eDate);
+        } catch (ParseException e) {
+            System.out.println("in catch block while parsing date");
+            log.info("Error while : ", e);
+           statementRange = startDate + " to " + endDate;
+        }
+        data.put("statementRage", statementRange);
+        File bankStatement = pdfGeneratorUtil.generatePDF("", "bank_statement", data);
+        if (sendPdfInEmail) {
+            emailService.sendEmailWithAttachment(EmailDetails.builder()
+                    .recipient(accountUser.getEmail())
+                    .subject("Bank Statement from "+ statementRange)
+                    .messageBody("Dear "+ fullName + ",\n" + "Your bank statement for the requested date range has been generated. Please refer to the attachment of this mail.")
+                    .attachment(bankStatement.getAbsolutePath())
+                    .build());
+        }
+        return bankStatement;
+    }
+
+    public ResponseEntity<Object> generateBankStatement(String accountNumber, String startDate, String endDate) {
+        User userAccount = userRepository.findByAccountNumber(accountNumber);
+        if (userAccount == null) {
+            log.error("Account not found with account number: {}", accountNumber);
+            return null; // or throw an exception
+        }
+        File bankStatementPdfFile = getBankStatementPdfFile(accountNumber, startDate, endDate, userAccount, false);
+        try {
+            byte[] fileContent = Files.readAllBytes(bankStatementPdfFile.toPath());
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=" + bankStatementPdfFile.getName())
+                    .header("Content-Type", "application/pdf")
+                    .body(fileContent);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 }
